@@ -25,9 +25,8 @@
 
 ## 🛠️ Tech Stack
 
-* HTML, CSS, JavaScript
-* LocalStorage API for data persistence
-* Fully responsive design (mobile-first)
+* HTML
+* LocalStorage for data persistence
 
 ---
 
