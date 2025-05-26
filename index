@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Job Shift Tracker (Ontario)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 font-sans min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-md bg-white shadow-md rounded-xl p-6 space-y-5">
+    <h1 class="text-2xl font-bold text-center">Job Shift Tracker</h1>
+
+    <!-- Hourly Wage -->
+    <div>
+      <label class="block text-sm font-semibold mb-1">Hourly Wage ($)</label>
+      <input id="wage" type="number" inputmode="decimal" step="0.01"
+             class="w-full p-2 border rounded focus:outline-none focus:ring focus:border-blue-400"
+             placeholder="Default: 16.55">
+    </div>
+
+    <!-- Add Shift -->
+    <div class="space-y-2">
+      <div class="flex gap-2">
+        <input id="date" type="date"
+               class="flex-1 p-2 border rounded focus:outline-none focus:ring focus:border-blue-400" />
+        <input id="hours" type="number" step="0.1"
+               class="flex-1 p-2 border rounded focus:outline-none focus:ring focus:border-blue-400"
+               placeholder="Hours" />
+      </div>
+      <button onclick="addShift()"
+              class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+        Add Shift
+      </button>
+    </div>
+
+    <!-- Shift List -->
+    <div id="shiftList" class="text-sm space-y-2 max-h-64 overflow-y-auto">
+      <!-- dynamically populated -->
+    </div>
+
+    <!-- Summary -->
+    <div class="pt-2 border-t">
+      <h2 class="font-semibold text-lg mb-1">Biweekly Summary</h2>
+      <p id="summary" class="text-sm text-gray-700 whitespace-pre-line"></p>
+    </div>
+  </div>
+
+  <script>
+    let shifts = JSON.parse(localStorage.getItem("shifts") || "[]");
+
+    function saveShifts() {
+      localStorage.setItem("shifts", JSON.stringify(shifts));
+    }
+
+    function addShift() {
+      const date = document.getElementById("date").value;
+      const hours = parseFloat(document.getElementById("hours").value);
+      if (!date || isNaN(hours)) return alert("Please enter a valid date and number of hours.");
+
+      shifts.push({ date, hours });
+      saveShifts();
+      render();
+    }
+
+    function deleteShift(index) {
+      shifts.splice(index, 1);
+      saveShifts();
+      render();
+    }
+
+    function render() {
+      const wage = parseFloat(document.getElementById("wage").value) || 16.55;
+      const shiftList = document.getElementById("shiftList");
+      shiftList.innerHTML = "";
+
+      shifts.forEach((s, i) => {
+        shiftList.innerHTML += `
+          <div class="flex justify-between items-center bg-gray-50 p-2 rounded">
+            <span>${s.date} — ${s.hours} hrs</span>
+            <button onclick="deleteShift(${i})" class="text-red-500 text-xs">✕</button>
+          </div>`;
+      });
+
+      // Biweekly Estimate
+      const now = new Date();
+      const twoWeeksAgo = new Date();
+      twoWeeksAgo.setDate(now.getDate() - 14);
+
+      const recentHours = shifts
+        .filter(s => new Date(s.date) >= twoWeeksAgo)
+        .reduce((sum, s) => sum + s.hours, 0);
+
+      const gross = recentHours * wage;
+      const net = gross * 0.85;
+
+      document.getElementById("summary").innerText =
+        `Hours (last 14 days): ${recentHours.toFixed(2)} hrs\n` +
+        `Estimated Gross Pay: $${gross.toFixed(2)}\n` +
+        `Estimated Net Pay: $${net.toFixed(2)}`;
+    }
+
+    render();
+  </script>
+</body>
+</html>
